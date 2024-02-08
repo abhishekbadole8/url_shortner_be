@@ -1,46 +1,76 @@
 const { nanoid } = require("nanoid");
 const Url = require("../models/urlModel");
 
-const getShortUrl = async (req, res) => {
+// generate short url
+//private
+const createShortUrl = async (req, res) => {
   try {
-    const shortId = nanoid(8);
+    const shortId = nanoid(8); // generate ramdom short id
     const id = req.id;
     const { original_url } = req.body;
-    // Check if original_url is provided
+
     if (!original_url) {
       return res.status(400).json({ error: "url is required" });
     }
 
-    // Find the document with the userId
-    let url = await Url.findOne({ id });
+    let url = await Url.findOne({ userId: id });
 
-    // If the document doesn't exist, create a new one
     if (!url) {
-      url = new Url({ userId:id, urls: [] });
+      url = new Url({ userId: id, urls: [] });
     }
 
-    // Update the urls array with the new URL
-    url.urls.push({ url_id: shortId, original_url });
+    url.urls.push({
+      url_id: shortId,
+      short_url: `${process.env.REDIRECT_API}${shortId}`,
+      original_url,
+    });
 
-    // Save the updated document
     await url.save();
 
     return res
       .status(201)
-      .json({ shortUrl: `http://localhost:5001/${shortId}` });
+      .json({ shortUrl: `${process.env.REDIRECT_API}${shortId}` });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ error: "internal server error" });
+  }
+};
+
+// get url
+// private
+const getShortUrls = async (req, res) => {
+  try {
+    const id = req.id;
+    // Find the document with the userId
+    let url = await Url.findOne({ userId: id });
+
+    return res.status(200).json({ urls: url.urls });
+  } catch (error) {
+    return res.status(200).json({ error: "internal server error" });
   }
 };
 
 const removeShortUrl = async (req, res) => {
   try {
-    const userId = req.headers.id;
-    const shortId = req.params;
+    const id = req.id;
+    const { shortId } = req.params;
+
+    if (!shortId) {
+      return res.status(400).json({ error: "shortId is required" });
+    }
+
+    const updatedUser = await Url.findOneAndUpdate(
+      { userId: id, "urls.url_id": shortId },
+      { $pull: { urls: { url_id: shortId } } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "Short URL not found" });
+    }
+    return res.status(200).json({ message: "Short URL deleted successfully" });
   } catch (error) {
     return res.status(500).json({ error: "internal server error" });
   }
 };
 
-module.exports = { getShortUrl, removeShortUrl };
+module.exports = { createShortUrl, getShortUrls, removeShortUrl };

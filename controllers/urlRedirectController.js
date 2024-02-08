@@ -18,7 +18,7 @@ const urlRedirect = async (req, res) => {
     
     return res.redirect(url[0].original_url);
   } catch (error) {
-    console.log(error);
+    
     return res.status(500).json({ error: "internal server error" });
   }
 };

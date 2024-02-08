@@ -13,6 +13,10 @@ const urlSchema = mongoose.Schema({
         required: true,
         unique: true,
       },
+      short_url: {
+        type: String,
+        required: true,
+      },
       original_url: {
         type: String,
         required: true,

@@ -7,10 +7,10 @@ const jwt = require("jsonwebtoken");
 // @access public
 const registerUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
     // check all fields are fill
-    if (!email || !password) {
+    if (!username || !email || !password) {
       return res.status(400).json({ error: "all field's are mandatory" });
     }
 
@@ -26,6 +26,7 @@ const registerUser = async (req, res) => {
 
     // create new user
     const user = await User.create({
+      username,
       email,
       password: hashedPassword,
     });
@@ -63,9 +64,13 @@ const loginUser = async (req, res) => {
     }
 
     // generate token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
 
     return res.status(200).json({ token });
   } catch (error) {
