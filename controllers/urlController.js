@@ -81,4 +81,34 @@ const removeShortUrl = async (req, res) => {
   }
 };
 
-module.exports = { createShortUrl, getShortUrls, removeShortUrl };
+// @desc Update short Url
+// @route Put api/user/urls/:urlId
+// @access Private route
+const updateShortUrl = async (req, res) => {
+  try {
+    const id = req.id;
+    const { urlId } = req.params;
+    const { original_url } = req.body;
+
+    if (!urlId || !original_url) {
+      return res.status(400).json({ error: "urlId and original_url are required" });
+    }
+
+    const updatedUser = await Url.findOneAndUpdate(
+      { userId: id, "urls.url_id": urlId },
+      { $set: { "urls.$.original_url": original_url } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "Short URL not found" });
+    }
+
+    return res.status(200).json({ message: "Short URL updated successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "internal server error" });
+  }
+};
+
+module.exports = { createShortUrl, getShortUrls, removeShortUrl,updateShortUrl };
