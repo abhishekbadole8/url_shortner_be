@@ -1,24 +1,31 @@
 const Url = require("../models/urlModel");
 
+// @desc Get redirect Url
+// @route Get /
+// @access Public route
 const urlRedirect = async (req, res) => {
   try {
-    const { shortId } = req.params;
+    const { urlId } = req.params;
 
-    const isUrl = await Url.findOneAndUpdate(
-      { "urls.url_id": shortId },
-      { $inc: { "urls.$.visit_count": 1 } },
-      { new: true }
+    const updatedUser = await Url.findOneAndUpdate(
+      { "urls.url_id": urlId },
+      {
+        $inc: { "urls.$.visit_count": 1 },
+      },
+      {
+        new: true,
+      }
     );
-
-    if (!isUrl) {
-      return res.status(404).json({ error: "URL not found" });
+    if (updatedUser) {
+      const updatedUrlObject = await updatedUser.urls.find(
+        (url) => url.url_id === urlId
+      );
+      const original = updatedUrlObject.original_url;
+      return res.redirect(original);
+    } else {
+      return res.status(404).json({ error: "No data found" });
     }
-
-    const url = isUrl.urls.filter((url) => url.url_id === shortId);
-    
-    return res.redirect(url[0].original_url);
   } catch (error) {
-    
     return res.status(500).json({ error: "internal server error" });
   }
 };

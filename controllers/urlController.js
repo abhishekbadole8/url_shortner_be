@@ -1,11 +1,12 @@
 const { nanoid } = require("nanoid");
 const Url = require("../models/urlModel");
 
-// generate short url
-//private
+// @desc Create short Url
+// @route Put api/user/url
+// @access Private route
 const createShortUrl = async (req, res) => {
   try {
-    const shortId = nanoid(8); // generate ramdom short id
+    const urlId = nanoid(8); // generate ramdom short id
     const id = req.id;
     const { original_url } = req.body;
 
@@ -20,47 +21,54 @@ const createShortUrl = async (req, res) => {
     }
 
     url.urls.push({
-      url_id: shortId,
-      short_url: `${process.env.REDIRECT_API}${shortId}`,
+      url_id: urlId,
+      short_url: process.env.REDIRECT_API + urlId,
       original_url,
     });
 
     await url.save();
 
-    return res
-      .status(201)
-      .json({ shortUrl: `${process.env.REDIRECT_API}${shortId}` });
+    return res.status(201).json({ shortUrl: process.env.REDIRECT_API + urlId });
   } catch (error) {
     return res.status(500).json({ error: "internal server error" });
   }
 };
 
-// get url
-// private
+// @desc Get short Url's
+// @route Get api/user/urls
+// @access Private route
 const getShortUrls = async (req, res) => {
   try {
     const id = req.id;
     // Find the document with the userId
     let url = await Url.findOne({ userId: id });
-
+    if (!url) {
+      return res.status(400).json({
+        error: `User with userid ${id} not found in the database.`,
+      });
+    }
     return res.status(200).json({ urls: url.urls });
   } catch (error) {
+    console.log(error);
     return res.status(200).json({ error: "internal server error" });
   }
 };
 
+// @desc Remove short Url
+// @route Delete api/user/urls/:urlId
+// @access Private route
 const removeShortUrl = async (req, res) => {
   try {
     const id = req.id;
-    const { shortId } = req.params;
+    const { urlId } = req.params;
 
-    if (!shortId) {
+    if (!urlId) {
       return res.status(400).json({ error: "shortId is required" });
     }
 
     const updatedUser = await Url.findOneAndUpdate(
-      { userId: id, "urls.url_id": shortId },
-      { $pull: { urls: { url_id: shortId } } },
+      { userId: id, "urls.url_id": urlId },
+      { $pull: { urls: { url_id: urlId } } },
       { new: true }
     );
 

@@ -10,6 +10,6 @@ const authTokenHandler = require("../middlewares/authHandler");
 router.put("/url", authTokenHandler, createShortUrl); // generate new short url
 router.get("/urls", authTokenHandler, getShortUrls); // get all urls
 
-router.delete("/urls/:shortId", authTokenHandler, removeShortUrl); // delete short url
+router.delete("/urls/:urlId", authTokenHandler, removeShortUrl); // delete short url
 
 module.exports = router;
