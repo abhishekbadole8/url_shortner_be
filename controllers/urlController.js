@@ -6,7 +6,7 @@ const Url = require("../models/urlModel");
 // @access Private route
 const createShortUrl = async (req, res) => {
   try {
-    const urlId = nanoid(8); // generate ramdom short id
+    const urlId = nanoid(5); // generate ramdom short id
     const id = req.id;
     const { original_url } = req.body;
 
